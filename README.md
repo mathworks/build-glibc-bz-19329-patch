@@ -67,7 +67,7 @@ This repository runs a number of github actions to build artefacts for specific 
     | - | - |
     | `debian:9` | `debian:stretch` |
     | `debian:10`| `debian:buster` |
-    | `debian:11`| `debian:bulleye` | 
+    | `debian:11`| `debian:bullseye` | 
     | `ubuntu:18.04` | `ubuntu:bionic` |
     | `ubuntu:20.04` | `ubuntu:focal` |
     | `ubuntu:21.04` | `ubuntu:hirsute` |

@@ -19,7 +19,7 @@ jobs:
       - name: "Build & test"
         shell: bash
         run: |
-          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=debian --build-arg DIST_TAG=bulleye --output type=local,dest=. .
+          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=debian --build-arg DIST_TAG=bullseye --output type=local,dest=. .
           DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=ubuntu --build-arg DIST_TAG=focal   --output type=local,dest=. .
 
       - name: "Get License to release under"
@@ -38,4 +38,3 @@ jobs:
             build/*.deb
             COPYING
             LICENSES
-            
