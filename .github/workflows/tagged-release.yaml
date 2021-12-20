@@ -1,0 +1,44 @@
+---
+# Copyright 2021 The MathWorks, Inc.
+name: "tagged-release"
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  pre-release:
+    name: "Pre Release"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2.3.4"
+
+      - name: "Build & test"
+        shell: bash
+        run: |
+          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=debian --build-arg DIST_TAG=stretch  --output type=local,dest=. .
+          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=debian --build-arg DIST_TAG=buster   --output type=local,dest=. .
+          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=debian --build-arg DIST_TAG=bullseye --output type=local,dest=. .
+          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=ubuntu --build-arg DIST_TAG=bionic   --output type=local,dest=. .
+          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=ubuntu --build-arg DIST_TAG=focal    --output type=local,dest=. .
+          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=ubuntu --build-arg DIST_TAG=hirsute  --output type=local,dest=. .
+
+      - name: "Get License to release under"
+        shell: bash
+        run: |
+          wget -q -O COPYING  'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=COPYING;hb=HEAD'
+          wget -q -O LICENSES 'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=LICENSES;hb=HEAD'
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            build/*.deb
+            COPYING
+            LICENSES      
