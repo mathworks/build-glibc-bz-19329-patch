@@ -1,14 +1,14 @@
 ---
-name: "release-ubuntu-focal"
+name: "release-debian-stretch"
 
 on:
   workflow_dispatch:
   schedule:
-    - cron:  '0 0 1 * *'
-    
+    - cron:  '0 3 1 * *'
+
 jobs:
   build:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
-      dist-base: ubuntu
-      dist-tag: focal
+      dist-base: debian
+      dist-tag: stretch
