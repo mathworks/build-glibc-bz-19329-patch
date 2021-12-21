@@ -1,0 +1,40 @@
+on:
+  workflow_call:
+    inputs:
+      dist-base:
+        required: true
+        type: string
+      dist-tag:
+        required: true
+        type: string
+    
+jobs:
+  current-release:
+    name: "Current Release"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2.3.4"
+
+      - name: "Build & test"
+        shell: bash
+        run: |
+          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=${{ inputs.dist-base }} --build-arg DIST_TAG=${{ inputs.dist-tag }}  --output type=local,dest=. .
+
+      - name: "Get License to release under"
+        shell: bash
+        run: |
+          wget -q -O COPYING  'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=COPYING;hb=HEAD'
+          wget -q -O LICENSES 'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=LICENSES;hb=HEAD'
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "${{ inputs.dist-base }}:${{ inputs.dist-tag }}"
+          prerelease: false
+          title: "Current Builds for ${{ inputs.dist-base }}:${{ inputs.dist-tag }}"
+          files: |
+            build/*.deb
+            COPYING
+            LICENSES 

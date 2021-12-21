@@ -1,0 +1,12 @@
+---
+name: "release-ubuntu-focal"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
+    with: 
+      dist-base: ubuntu
+      dist-tag: focal

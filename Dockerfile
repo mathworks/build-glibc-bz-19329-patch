@@ -3,9 +3,11 @@
 # Default to building for glibc 2.31 in ubuntu:20.04 but by specifying
 # --build-arg RELEASE:18.04 in the docker build phase this will build for 
 # glibc 2.27
+ARG ARCH=
 ARG DIST_BASE=ubuntu
 ARG DIST_TAG=20.04
-FROM ${DIST_BASE}:${DIST_TAG} AS build-stage
+FROM ${ARCH}${DIST_BASE}:${DIST_TAG} AS build-stage
+
 
 ARG DIST_BASE
 ARG DIST_TAG
@@ -23,6 +25,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     devscripts
 
 ARG BUILD_ROOT=/opt/glibc/src/glibc/
+ARG PKG_EXT
 WORKDIR ${BUILD_ROOT}
 
 # Build glibc in 3 distinct stages
@@ -41,7 +44,8 @@ RUN ./patch-glibc-src.sh
 COPY scripts/build-glibc-src.sh ${BUILD_ROOT}/
 RUN ./build-glibc-src.sh
 
-RUN cp ${BUILD_ROOT}/libc6_2*.deb /tmp/
+RUN mkdir /tmp/build
+RUN cp ${BUILD_ROOT}/*.deb /tmp/build/
 
 FROM scratch AS release-stage
-COPY --from=build-stage /tmp/*.deb /build/
+COPY --from=build-stage /tmp/build/*.deb /build/

@@ -61,7 +61,7 @@ This repository runs a number of github actions to build artefacts for specific 
     git clone https://build-glibc-bz19329-patch.github.com
     cd build-glibc-bz19329-patch
 ```
-2. Build (using `docker build`) for the distribution and specific release you want to patch. Select the distribution and specific distribution version by setting the build argument `DIST_BASE` and `DIST_TAG`. `DIST_BASE:DIST_BASE` must be one of 
+2. Build (using `docker build`) for the distribution and specific release you want to patch. Select the distribution and specific distribution version by setting the build argument `DIST_BASE` and `DIST_TAG`. `DIST_BASE:DIST_TAG` must be one of 
 
     | | | 
     | - | - |
@@ -86,6 +86,16 @@ libc6_2.27-3ubuntu1.4.custom_amd64.deb
 libc6_2.28-10.custom_amd64.deb
 libc6_2.31-13+deb11u2.custom_amd64.deb
 ```
+
+### Overriding package version string
+The package version extension defaults to `.DIST_BASE.DIST_TAG.custom`, where
+`${DIST_TAG}` defaults to the `VERSION_CODENAME` found in `/etc/os-release`.  This version
+can be overridden by setting the build argument `PKG_EXT`.
+
+E.g., on Debian 11, the default packages will be named like
+`libc6_2.31-13+deb11u2.debian.bullseye.custom_amd64.deb`.  If built with
+`--build-arg PKG_EXT=.test`, the package would instead be named
+`libc6_2.31-13+deb11u2.test_amd64.deb`.
 
 ## Installing the built packages
 *Please note the caution above - take care not to install the wrong package version compared to the rest of your system. Consider trying the install in a disposable docker container first.*
