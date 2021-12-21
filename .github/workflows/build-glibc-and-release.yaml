@@ -1,3 +1,6 @@
+---
+name: "build-glibc-and-release"
+
 on:
   workflow_call:
     inputs:
@@ -9,15 +12,14 @@ on:
         type: string
     
 jobs:
-  current-release:
-    name: "Current Release"
+  build:
     runs-on: "ubuntu-latest"
 
     steps:
       - name: "Checkout source code"
         uses: "actions/checkout@v2.3.4"
 
-      - name: "Build & test"
+      - name: "Build"
         shell: bash
         run: |
           DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=${{ inputs.dist-base }} --build-arg DIST_TAG=${{ inputs.dist-tag }}  --output type=local,dest=. .
@@ -31,7 +33,7 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ inputs.dist-base }}:${{ inputs.dist-tag }}"
+          automatic_release_tag: "${{ inputs.dist-base }}-${{ inputs.dist-tag }}"
           prerelease: false
           title: "Current Builds for ${{ inputs.dist-base }}:${{ inputs.dist-tag }}"
           files: |
