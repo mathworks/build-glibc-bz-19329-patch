@@ -1,15 +1,16 @@
 ---
 # Copyright 2021 The MathWorks, Inc.
-name: "tagged-release"
+name: "current-release"
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+  schedule:
+    # This schedule forces a rebuild of current on the 1st of the month
+    - cron:  '0 0 1 * *'
 
 jobs:
-  pre-release:
-    name: "Pre Release"
+  current-release:
+    name: "Current Release"
     runs-on: "ubuntu-latest"
 
     steps:
@@ -35,9 +36,9 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build"
+          automatic_release_tag: "current"
+          prerelease: false
+          title: "Current Builds for Common Platforms"
           files: |
             build/*.deb
             COPYING
