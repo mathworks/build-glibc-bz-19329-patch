@@ -9,10 +9,9 @@ on:
   schedule:
     - cron:  '0 0 1 * *'  
 
-defaults:
-  concurrency:
-    group: release
-    cancel-in-progress: false
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   build-debian-stretch:
