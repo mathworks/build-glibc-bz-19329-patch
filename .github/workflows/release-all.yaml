@@ -17,30 +17,35 @@ jobs:
       dist-tag: stretch
 
   build-debian-buster:
+    needs: build-debian-stretch
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: debian
       dist-tag: buster
 
   build-debian-bullseye:
+    needs: build-debian-buster
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: debian
       dist-tag: bullseye
 
   build-ubuntu-bionic:
+    needs: build-debian-bullseye
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ubuntu
       dist-tag: bionic
 
   build-ubuntu-focal:
+    needs: build-ubuntu-bionic
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ubuntu
       dist-tag: focal
 
   build-ubuntu-hirsute:
+    needs: build-ubuntu-hirsute
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ubuntu
