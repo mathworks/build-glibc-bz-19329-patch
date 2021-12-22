@@ -15,51 +15,39 @@ jobs:
     with: 
       dist-base: debian
       dist-tag: stretch
-    concurrency: 
-      group: artifact-release
-      cancel-in-progress: true      
+    concurrency: artifact-release
 
   build-debian-buster:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: debian
       dist-tag: buster
-    concurrency: 
-      group: artifact-release
-      cancel-in-progress: true      
+    concurrency: artifact-release
 
   build-debian-bullseye:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: debian
       dist-tag: bullseye
-    concurrency: 
-      group: artifact-release
-      cancel-in-progress: true      
+    concurrency: artifact-release
 
   build-ubuntu-bionic:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ubuntu
       dist-tag: bionic
-    concurrency: 
-      group: artifact-release
-      cancel-in-progress: true      
+    concurrency: artifact-release
 
   build-ubuntu-focal:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ubuntu
       dist-tag: focal
-    concurrency: 
-      group: artifact-release
-      cancel-in-progress: true      
+    concurrency: artifact-release
 
   build-ubuntu-hirsute:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ubuntu
       dist-tag: hirsute
-    concurrency: 
-      group: artifact-release
-      cancel-in-progress: true      
+    concurrency: artifact-release
