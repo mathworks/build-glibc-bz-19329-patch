@@ -1,20 +1,7 @@
 ---
 name: "build-glibc-and-release"
 
-
-# To release a spcific set of artifacts using this workflow you can use the github CLI to trigger
-# a workflow dispatch. An example of this for ubuntu:focal would be:
-#
-#   gh workflow run build-glibc-and-release -f dist-base=ubuntu -f dist-tag=focal
 on:
-  workflow_dispatch:
-    inputs:
-      dist-base:
-        required: true
-        type: string
-      dist-tag:
-        required: true
-        type: string
   workflow_call:
     inputs:
       dist-base:
