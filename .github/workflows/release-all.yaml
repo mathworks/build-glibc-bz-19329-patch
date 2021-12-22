@@ -9,49 +9,39 @@ on:
   schedule:
     - cron:  '0 0 1 * *'  
 
-concurrency:
-  group: release-group
-  cancel-in-progress: false
-
 jobs:
   build-debian-stretch:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: debian
       dist-tag: stretch
-    concurrency: release-group
 
   build-debian-buster:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: debian
       dist-tag: buster
-    concurrency: release-group
 
   build-debian-bullseye:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: debian
       dist-tag: bullseye
-    concurrency: release-group
 
   build-ubuntu-bionic:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ubuntu
       dist-tag: bionic
-    concurrency: release-group
 
   build-ubuntu-focal:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ubuntu
       dist-tag: focal
-    concurrency: release-group
 
   build-ubuntu-hirsute:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ubuntu
       dist-tag: hirsute
-    concurrency: release-group

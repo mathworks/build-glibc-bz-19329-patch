@@ -15,7 +15,11 @@ on:
         required: false
         type: boolean
         default: false
-    
+
+concurrency:
+  group: build-glibc-and-release
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: "ubuntu-latest"
