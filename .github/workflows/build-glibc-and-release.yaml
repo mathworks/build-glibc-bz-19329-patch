@@ -8,6 +8,17 @@ name: "build-glibc-and-release"
 #   gh workflow run build-glibc-and-release -f dist-base=ubuntu -f dist-tag=focal
 on:
   workflow_dispatch:
+    inputs:
+      dist-base:
+        required: true
+        type: string
+      dist-tag:
+        required: true
+        type: string
+      prerelease:
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       dist-base:
