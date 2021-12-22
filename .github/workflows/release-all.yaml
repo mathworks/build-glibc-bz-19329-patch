@@ -16,7 +16,7 @@ jobs:
       dist-base: debian
       dist-tag: stretch
     concurrency: 
-      group: artifact-release
+      group: debian
       cancel-in-progress: false
 
   build-debian-buster:
@@ -25,7 +25,7 @@ jobs:
       dist-base: debian
       dist-tag: buster
     concurrency: 
-      group: artifact-release
+      group: debian
       cancel-in-progress: false      
 
   build-debian-bullseye:
@@ -34,7 +34,7 @@ jobs:
       dist-base: debian
       dist-tag: bullseye
     concurrency: 
-      group: artifact-release
+      group: debian
       cancel-in-progress: false      
 
   build-ubuntu-bionic:
@@ -42,8 +42,9 @@ jobs:
     with: 
       dist-base: ubuntu
       dist-tag: bionic
+    needs: [build-debian-stretch, build-debian-buster, build-debian-bullseye]
     concurrency: 
-      group: artifact-release
+      group: ubuntu
       cancel-in-progress: false      
 
   build-ubuntu-focal:
@@ -51,8 +52,9 @@ jobs:
     with: 
       dist-base: ubuntu
       dist-tag: focal
+    needs: [build-debian-stretch, build-debian-buster, build-debian-bullseye]
     concurrency: 
-      group: artifact-release
+      group: ubuntu
       cancel-in-progress: false      
 
   build-ubuntu-hirsute:
@@ -60,6 +62,7 @@ jobs:
     with: 
       dist-base: ubuntu
       dist-tag: hirsute
+    needs: [build-debian-stretch, build-debian-buster, build-debian-bullseye]
     concurrency: 
-      group: artifact-release
+      group: ubuntu
       cancel-in-progress: false      
