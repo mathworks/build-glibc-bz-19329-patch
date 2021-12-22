@@ -17,7 +17,7 @@ jobs:
       dist-tag: stretch
     concurrency: 
       group: debian
-      cancel-in-progress: true      
+      cancel-in-progress: false
 
   build-debian-buster:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
@@ -26,7 +26,7 @@ jobs:
       dist-tag: buster
     concurrency: 
       group: debian
-      cancel-in-progress: true      
+      cancel-in-progress: false      
 
   build-debian-bullseye:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
@@ -35,7 +35,7 @@ jobs:
       dist-tag: bullseye
     concurrency: 
       group: debian
-      cancel-in-progress: true      
+      cancel-in-progress: false      
 
   build-ubuntu-bionic:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
@@ -45,7 +45,7 @@ jobs:
     needs: [build-debian-stretch, build-debian-buster, build-debian-bullseye]
     concurrency: 
       group: ubuntu
-      cancel-in-progress: true      
+      cancel-in-progress: false      
 
   build-ubuntu-focal:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
@@ -55,7 +55,7 @@ jobs:
     needs: [build-debian-stretch, build-debian-buster, build-debian-bullseye]
     concurrency: 
       group: ubuntu
-      cancel-in-progress: true      
+      cancel-in-progress: false      
 
   build-ubuntu-hirsute:
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
@@ -65,4 +65,4 @@ jobs:
     needs: [build-debian-stretch, build-debian-buster, build-debian-bullseye]
     concurrency: 
       group: ubuntu
-      cancel-in-progress: true      
+      cancel-in-progress: false      
