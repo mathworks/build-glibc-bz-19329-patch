@@ -15,10 +15,6 @@ on:
       dist-tag:
         required: true
         type: string
-      prerelease:
-        required: false
-        type: boolean
-        default: false
   workflow_call:
     inputs:
       dist-base:
