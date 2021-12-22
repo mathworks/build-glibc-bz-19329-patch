@@ -1,7 +1,13 @@
 ---
 name: "build-glibc-and-release"
 
+
+# To release a spcific set of artifacts using this workflow you can use the github CLI to trigger
+# a workflow dispatch. An example of this for ubuntu:focal would be:
+#
+#   gh workflow run build-glibc-and-release -f dist-base=ubuntu -f dist-tag=focal
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       dist-base:
@@ -10,6 +16,10 @@ on:
       dist-tag:
         required: true
         type: string
+      prerelease:
+        required: false
+        type: boolean
+        default: false
     
 jobs:
   build:
@@ -24,19 +34,19 @@ jobs:
         run: |
           DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=${{ inputs.dist-base }} --build-arg DIST_TAG=${{ inputs.dist-tag }}  --output type=local,dest=. .
 
-      - name: "Get License to release under"
+      - name: "Download glibc license info"
         shell: bash
         run: |
+          cd build
           wget -q -O COPYING  'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=COPYING;hb=HEAD'
           wget -q -O LICENSES 'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=LICENSES;hb=HEAD'
 
-      - uses: "marvinpinto/action-automatic-releases@latest"
+      - name: "Release build artifacts"
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "${{ inputs.dist-base }}-${{ inputs.dist-tag }}"
-          prerelease: false
+          prerelease: ${{ inputs.prerelease }}
           title: "Current Builds for ${{ inputs.dist-base }}:${{ inputs.dist-tag }}"
           files: |
-            build/*.deb
-            COPYING
-            LICENSES 
+            build/*
