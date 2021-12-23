@@ -16,9 +16,9 @@ on:
         type: boolean
         default: false
 
-concurrency:
-  group: build-glibc-and-release
-  cancel-in-progress: false
+# concurrency:
+#   group: build-glibc-and-release
+#   cancel-in-progress: false
 
 jobs:
   build:
