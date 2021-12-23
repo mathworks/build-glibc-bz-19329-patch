@@ -40,12 +40,19 @@ jobs:
           wget -q -O COPYING  'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=COPYING;hb=HEAD'
           wget -q -O LICENSES 'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=LICENSES;hb=HEAD'
 
-      - name: "Release build artifacts"
-        uses: "marvinpinto/action-automatic-releases@latest"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ inputs.dist-base }}-${{ inputs.dist-tag }}"
-          prerelease: ${{ inputs.prerelease }}
-          title: "Current Builds for ${{ inputs.dist-base }}:${{ inputs.dist-tag }}"
+          path: |
+            build/*
+
+      - name: Release artifacts
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.dist-base }}-${{ inputs.dist-tag }}
+          name: "Current build for: ${{ inputs.dist-base }}-${{ inputs.dist-tag }}"
+          prerelease: false
+          draft: false
+          generate_release_notes: false
           files: |
             build/*
