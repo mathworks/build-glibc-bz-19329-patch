@@ -16,10 +16,6 @@ on:
         type: boolean
         default: false
 
-# concurrency:
-#   group: build-glibc-and-release
-#   cancel-in-progress: false
-
 jobs:
   build:
     runs-on: "ubuntu-latest"
@@ -40,6 +36,14 @@ jobs:
           wget -q -O COPYING  'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=COPYING;hb=HEAD'
           wget -q -O LICENSES 'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=LICENSES;hb=HEAD'
 
+      - name: Delete existing release
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true 
+          tag_name: ${{ inputs.dist-base }}-${{ inputs.dist-tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
@@ -51,7 +55,8 @@ jobs:
         with:
           tag_name: ${{ inputs.dist-base }}-${{ inputs.dist-tag }}
           name: "Current build for: ${{ inputs.dist-base }}-${{ inputs.dist-tag }}"
-          prerelease: false
+          body: ""
+          prerelease: ${{ inputs.prerelease }}
           draft: false
           generate_release_notes: false
           files: |
