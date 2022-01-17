@@ -15,6 +15,10 @@ on:
         required: false
         type: boolean
         default: false
+      dockerfile:
+        required: false
+        type: string
+        default: Dockerfile.debian
 
 jobs:
   build:
@@ -27,7 +31,7 @@ jobs:
       - name: "Build"
         shell: bash
         run: |
-          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=${{ inputs.dist-base }} --build-arg DIST_TAG=${{ inputs.dist-tag }}  --output type=local,dest=. .
+          DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=${{ inputs.dist-base }} --build-arg DIST_TAG=${{ inputs.dist-tag }}  -f ${{ inputs.dockerfile }} --output type=local,dest=. .
 
       - name: "Download glibc license info"
         shell: bash

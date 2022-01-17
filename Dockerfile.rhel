@@ -1,0 +1,40 @@
+# Copyright 2021 The MathWorks, Inc.
+ARG BUILD_ROOT=/root/
+ARG RPM_DIR=${BUILD_ROOT}/rpmbuild/RPMS/x86_64/
+
+# Default to building for glibc 2.31 in ubuntu:20.04 but by specifying
+# --build-arg RELEASE=18.04 in the docker build phase this will build for 
+# glibc 2.27
+ARG ARCH=
+ARG DIST_BASE=almalinux
+ARG DIST_TAG=8.5
+FROM ${DIST_BASE}:${DIST_TAG} AS build-stage
+
+RUN dnf install -y --nodocs dnf-plugins-core && \
+    dnf config-manager --enable powertools && \
+    dnf install -y rpm-build  
+
+ARG BUILD_ROOT
+WORKDIR ${BUILD_ROOT}
+
+RUN dnf download --source glibc && \
+    dnf builddep -y --nodocs glibc-*.src.rpm && \
+    rpm -ivh glibc-*.src.rpm
+
+COPY scripts/update-specfile.sh ${BUILD_ROOT}
+COPY patches/rhel ${BUILD_ROOT}/patches
+
+RUN cp patches/2.28/* rpmbuild/SOURCES && \
+    ./update-specfile.sh
+
+RUN rpmbuild --nocheck -bb rpmbuild/SPECS/glibc.spec
+
+ARG RPM_DIR
+WORKDIR ${RPM_DIR}
+
+RUN tar -czf all-packages.tar.gz *.rpm
+
+FROM scratch AS release-stage
+ARG RPM_DIR
+COPY --from=build-stage ${RPM_DIR}/*.rpm /build/
+COPY --from=build-stage ${RPM_DIR}/all-packages.tar.gz /build/

@@ -1,4 +1,4 @@
-Fix off-by-one errlr listed in https://sourceware.org/bugzilla/show_bug.cgi?id=19329#c9
+Fix off-by-one error listed in https://sourceware.org/bugzilla/show_bug.cgi?id=19329#c9
 --- a/elf/dl-tls.c
 +++ b/elf/dl-tls.c
 @@ -620,7 +620,7 @@ _dl_allocate_tls_init (void *result)

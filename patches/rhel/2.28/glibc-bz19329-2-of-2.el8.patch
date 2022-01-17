@@ -1,17 +1,16 @@
 The content of this file is derived from original patches published to libc-alpha at sourceware dot org
-by Szabolcs Nagy. The original, unmodified, version is available in the patches/2.27 folder of
+by Szabolcs Nagy. The original, unmodified, version is available in the patches/debian/2.27 folder of
 this repository or from https://sourceware.org/legacy-ml/libc-alpha/2016-11/msg01093.html
 
-The original content has been adapted by MathWorks to enable patching glibc 2.31 since there were 
+The original content has been adapted by MathWorks to enable patching glibc 2.28 since there were 
 source code changes in glibc since the original patches were constructed
 
-NOTE: ADAPTED TO PATCH v2.31 via quilt
+NOTE: ADAPTED TO PATCH v2.28 via rpmbuild
 
+From c19efcb26d7e73e4baa16f95dc3bd0c18288ee60 Mon Sep 17 00:00:00 2001
 From: Szabolcs Nagy <szabolcs dot nagy at arm dot com>
-To: GNU C Library <libc-alpha at sourceware dot org>, Torvald Riegel <triegel at redhat dot com>
-Cc: <nd at arm dot com>
 Date: Wed, 30 Nov 2016 11:44:32 +0000
-Subject: [RFC PATCH 2/2][BZ 19329] Fix data races between pthread_create and dlopen
+Subject: [PATCH 2/3] Fix data races between pthread_create and dlopen
 
 This fixes a subset of the issues described in
 https://sourceware.org/ml/libc-alpha/2016-11/msg01026.html
@@ -30,21 +29,16 @@ may take the GL(dl_load_write_lock) to sync with dlclose
 or the GL(dl_load_lock) to sync with dlopen and dlclose
 (that would simplify the concurrency design, but increase
 lock contention on the locks).
+---
+ elf/dl-open.c |  7 ++++-
+ elf/dl-tls.c  | 86 ++++++++++++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 81 insertions(+), 12 deletions(-)
 
-2016-11-30  Szabolcs Nagy  <szabolcs.nagy@arm.com>
-
-	[BZ #19329]
-	* elf/dl-open.c (dl_open_worker): Write GL(dl_tls_generation)
-	atomically.
-	* elf/dl-tls.c (_dl_allocate_tls_init): Read GL(dl_tls_generation),
-	GL(dl_tls_max_dtv_idx), slotinfo entries and listp->next atomically.
-	Remove assertions that cannot be guaranteed.
-	(_dl_add_to_slotinfo): Write the slotinfo entries and listp->next
-	atomically.
-
+diff --git a/elf/dl-open.c b/elf/dl-open.c
+index 3d49a845..fbdd10e8 100644
 --- a/elf/dl-open.c
 +++ b/elf/dl-open.c
-@@ -387,9 +387,14 @@ update_tls_slotinfo (struct link_map *ne
+@@ -395,9 +395,14 @@ update_tls_slotinfo (struct link_map *new)
  	}
      }
  
@@ -60,9 +54,11 @@ lock contention on the locks).
  
    /* We need a second pass for static tls data, because
       _dl_update_slotinfo must not be run while calls to
+diff --git a/elf/dl-tls.c b/elf/dl-tls.c
+index 14fe7c6f..d1866af1 100644
 --- a/elf/dl-tls.c
 +++ b/elf/dl-tls.c
-@@ -489,6 +489,36 @@ _dl_resize_dtv (dtv_t *dtv)
+@@ -512,6 +512,36 @@ _dl_resize_dtv (dtv_t *dtv)
  }
  
  
@@ -99,7 +95,7 @@ lock contention on the locks).
  void *
  _dl_allocate_tls_init (void *result)
  {
-@@ -500,12 +530,24 @@ _dl_allocate_tls_init (void *result)
+@@ -523,12 +553,24 @@ _dl_allocate_tls_init (void *result)
    struct dtv_slotinfo_list *listp;
    size_t total = 0;
    size_t maxgen = 0;
@@ -125,7 +121,7 @@ lock contention on the locks).
  
        /* Install this new dtv in the thread data structures.  */
        INSTALL_DTV (result, &dtv[-1]);
-@@ -522,22 +564,33 @@ _dl_allocate_tls_init (void *result)
+@@ -545,22 +587,33 @@ _dl_allocate_tls_init (void *result)
        for (cnt = total == 0 ? 1 : 0; cnt < listp->len; ++cnt)
  	{
  	  struct link_map *map;
@@ -163,7 +159,7 @@ lock contention on the locks).
  	  dtv[map->l_tls_modid].pointer.val = TLS_DTV_UNALLOCATED;
  	  dtv[map->l_tls_modid].pointer.to_free = NULL;
  
-@@ -567,11 +620,15 @@ _dl_allocate_tls_init (void *result)
+@@ -590,11 +643,15 @@ _dl_allocate_tls_init (void *result)
  	}
  
        total += cnt;
@@ -182,7 +178,7 @@ lock contention on the locks).
      }
  
    /* The DTV version is up-to-date now.  */
-@@ -970,7 +1027,7 @@ _dl_add_to_slotinfo (struct link_map *l,
+@@ -993,7 +1050,7 @@ _dl_add_to_slotinfo (struct link_map *l, bool do_add)
  	 the first slot.  */
        assert (idx == 0);
  
@@ -191,7 +187,7 @@ lock contention on the locks).
  	malloc (sizeof (struct dtv_slotinfo_list)
  		+ TLS_SLOTINFO_SURPLUS * sizeof (struct dtv_slotinfo));
        if (listp == NULL)
-@@ -985,12 +1042,19 @@ _dl_add_to_slotinfo (struct link_map *l,
+@@ -1008,12 +1065,19 @@ _dl_add_to_slotinfo (struct link_map *l, bool do_add)
        listp->next = NULL;
        memset (listp->slotinfo, '\0',
  	      TLS_SLOTINFO_SURPLUS * sizeof (struct dtv_slotinfo));
@@ -213,3 +209,6 @@ lock contention on the locks).
 +      atomic_store_release (&listp->slotinfo[idx].map, l);
      }
  }
+-- 
+2.27.0
+

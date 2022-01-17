@@ -1,0 +1,215 @@
+The content of this file is derived from original patches published to libc-alpha at sourceware dot org
+by Szabolcs Nagy. The original, unmodified, version is available in the patches/debian/2.27 folder of
+this repository or from https://sourceware.org/legacy-ml/libc-alpha/2016-11/msg01093.html
+
+The original content has been adapted by MathWorks to enable patching glibc 2.31 since there were 
+source code changes in glibc since the original patches were constructed
+
+NOTE: ADAPTED TO PATCH v2.31 via quilt
+
+From: Szabolcs Nagy <szabolcs dot nagy at arm dot com>
+To: GNU C Library <libc-alpha at sourceware dot org>, Torvald Riegel <triegel at redhat dot com>
+Cc: <nd at arm dot com>
+Date: Wed, 30 Nov 2016 11:44:32 +0000
+Subject: [RFC PATCH 2/2][BZ 19329] Fix data races between pthread_create and dlopen
+
+This fixes a subset of the issues described in
+https://sourceware.org/ml/libc-alpha/2016-11/msg01026.html
+without adding locks to pthread_create.
+
+Only races between dlopen and pthread_create were considered,
+and the asserts got removed that tried to check for concurrency
+issues.
+
+The patch is incomplete because dlclose, tls access and
+dl_iterate_phdr related code paths are not modified.
+
+dlclose should be updated in a similar fashion to dlopen
+to make the patch complete alternatively pthread_create
+may take the GL(dl_load_write_lock) to sync with dlclose
+or the GL(dl_load_lock) to sync with dlopen and dlclose
+(that would simplify the concurrency design, but increase
+lock contention on the locks).
+
+2016-11-30  Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	[BZ #19329]
+	* elf/dl-open.c (dl_open_worker): Write GL(dl_tls_generation)
+	atomically.
+	* elf/dl-tls.c (_dl_allocate_tls_init): Read GL(dl_tls_generation),
+	GL(dl_tls_max_dtv_idx), slotinfo entries and listp->next atomically.
+	Remove assertions that cannot be guaranteed.
+	(_dl_add_to_slotinfo): Write the slotinfo entries and listp->next
+	atomically.
+
+--- a/elf/dl-open.c
++++ b/elf/dl-open.c
+@@ -387,9 +387,14 @@ update_tls_slotinfo (struct link_map *ne
+ 	}
+     }
+ 
+-  if (__builtin_expect (++GL(dl_tls_generation) == 0, 0))
++  /* This cannot be in a data-race so non-atomic load is valid too.  */
++  size_t newgen = atomic_load_relaxed (&GL(dl_tls_generation)) + 1;
++  /* Synchronize with _dl_allocate_tls_init (see notes there) and
++     avoid storing an overflowed counter.  */
++  if (__builtin_expect (newgen == 0, 0))
+     _dl_fatal_printf (N_("\
+ TLS generation counter wrapped!  Please report this."));
++  atomic_store_release (&GL(dl_tls_generation), newgen);
+ 
+   /* We need a second pass for static tls data, because
+      _dl_update_slotinfo must not be run while calls to
+--- a/elf/dl-tls.c
++++ b/elf/dl-tls.c
+@@ -489,6 +489,36 @@ _dl_resize_dtv (dtv_t *dtv)
+ }
+ 
+ 
++/*
++CONCURRENCY NOTES
++
++dlopen (and dlclose) holds the GL(dl_load_lock) while writing shared state,
++which may be concurrently read by pthread_create and tls access without taking
++the lock, so atomic access should be used.  The shared state:
++
++  GL(dl_tls_max_dtv_idx) - max modid assigned, (modid can be reused).
++  GL(dl_tls_generation) - generation count, incremented by dlopen and dlclose.
++  GL(dl_tls_dtv_slotinfo_list) - list of entries, contains generation count
++                                 and link_map for each module with a modid.
++
++A module gets a modid assigned if it has tls, a modid identifies a slotinfo
++entry and it is the index of the corresponding dtv slot.  The generation count
++is assigned to slotinfo entries of a newly loaded or unloaded module and its
++newly loaded or unloaded dependencies.
++
++TODO: dlclose may free memory read by a concurrent pthread_create or tls
++access.  This is broken now, so it is assumed that dlclose does not free
++link_map structures while pthread_create or __tls_get_addr is reading them.
++
++pthread_create calls _dl_allocate_tls_init (before creating the new thread),
++which should guarantee that the dtv is in a consistent state at the end:
++
++All slotinfo updates with generation <= dtv[0].counter are reflected in the
++dtv and arbitrary later module unloads may also be reflected as unallocated
++entries. (Note: a modid reuse implies a module unload and accessing tls in
++an unloaded module is undefined.)
++*/
++
+ void *
+ _dl_allocate_tls_init (void *result)
+ {
+@@ -500,12 +530,24 @@ _dl_allocate_tls_init (void *result)
+   struct dtv_slotinfo_list *listp;
+   size_t total = 0;
+   size_t maxgen = 0;
++  /* Synchronizes with the increments in dl_{open,close}_worker.
++     Slotinfo updates of this generation are sequenced before the
++     write we read from here.  */
++  size_t gen_count = atomic_load_acquire (&GL(dl_tls_generation));
++  /* Either reads from the last write that is sequenced before the
++     generation counter increment we synchronized with or a write
++     made by a later dlopen/dlclose.  dlclose may decrement this,
++     but only if related modules are unloaded.  So it is an upper
++     bound on non-unloaded modids up to gen_count generation.  */
++  size_t dtv_slots = atomic_load_relaxed (&GL(dl_tls_max_dtv_idx));
+ 
+   /* Check if the current dtv is big enough.   */
+-  if (dtv[-1].counter < GL(dl_tls_max_dtv_idx))
++  if (dtv[-1].counter < dtv_slots)
+     {
+       /* Resize the dtv.  */
+       dtv = _dl_resize_dtv (dtv);
++      /* _dl_resize_dtv rereads GL(dl_tls_max_dtv_idx) which may decrease.  */
++      dtv_slots = dtv[-1].counter;
+ 
+       /* Install this new dtv in the thread data structures.  */
+       INSTALL_DTV (result, &dtv[-1]);
+@@ -522,22 +564,33 @@ _dl_allocate_tls_init (void *result)
+       for (cnt = total == 0 ? 1 : 0; cnt < listp->len; ++cnt)
+ 	{
+ 	  struct link_map *map;
++	  size_t gen;
+ 	  void *dest;
+ 
+ 	  /* Check for the total number of used slots.  */
+-	  if (total + cnt > GL(dl_tls_max_dtv_idx))
++	  if (total + cnt > dtv_slots)
+ 	    break;
+ 
+-	  map = listp->slotinfo[cnt].map;
++	  /* Synchronize with dl_add_to_slotinfo and remove_slotinfo.  */
++	  map = atomic_load_acquire (&listp->slotinfo[cnt].map);
+ 	  if (map == NULL)
+ 	    /* Unused entry.  */
+ 	    continue;
+ 
++	  /* Consistent generation count with the map read above.
++	     Inconsistent gen may be read if the entry is being reused,
++	     in which case it is larger than gen_count and we skip it.  */
++	  gen = atomic_load_relaxed (&listp->slotinfo[cnt].gen);
++	  if (gen > gen_count)
++	    /* New entry.  */
++	    continue;
++
+ 	  /* Keep track of the maximum generation number.  This might
+ 	     not be the generation counter.  */
+-	  assert (listp->slotinfo[cnt].gen <= GL(dl_tls_generation));
+-	  maxgen = MAX (maxgen, listp->slotinfo[cnt].gen);
++	  maxgen = MAX (maxgen, gen);
+ 
++	  /* TODO: concurrent dlclose may free map which would break
++	     the rest of the code below.  */
+ 	  dtv[map->l_tls_modid].pointer.val = TLS_DTV_UNALLOCATED;
+ 	  dtv[map->l_tls_modid].pointer.to_free = NULL;
+ 
+@@ -567,11 +620,15 @@ _dl_allocate_tls_init (void *result)
+ 	}
+ 
+       total += cnt;
+-      if (total >= GL(dl_tls_max_dtv_idx))
++      if (total >= dtv_slots)
+ 	break;
+ 
+-      listp = listp->next;
+-      assert (listp != NULL);
++      /* Synchronize with dl_add_to_slotinfo.  */
++      listp = atomic_load_acquire (&listp->next);
++      /* dtv_slots is an upper bound on the number of entries we care
++	 about, the list may end sooner.  */
++      if (listp == NULL)
++	break;
+     }
+ 
+   /* The DTV version is up-to-date now.  */
+@@ -970,7 +1027,7 @@ _dl_add_to_slotinfo (struct link_map *l,
+ 	 the first slot.  */
+       assert (idx == 0);
+ 
+-      listp = prevp->next = (struct dtv_slotinfo_list *)
++      listp = (struct dtv_slotinfo_list *)
+ 	malloc (sizeof (struct dtv_slotinfo_list)
+ 		+ TLS_SLOTINFO_SURPLUS * sizeof (struct dtv_slotinfo));
+       if (listp == NULL)
+@@ -985,12 +1042,19 @@ _dl_add_to_slotinfo (struct link_map *l,
+       listp->next = NULL;
+       memset (listp->slotinfo, '\0',
+ 	      TLS_SLOTINFO_SURPLUS * sizeof (struct dtv_slotinfo));
++      /* Add the new list item and synchronize with _dl_allocate_tls_init.  */
++      atomic_store_release (&prevp->next, listp);
+     }
+ 
+   /* Add the information into the slotinfo data structure.  */
+   if (do_add)
+     {
+-      listp->slotinfo[idx].map = l;
+-      listp->slotinfo[idx].gen = GL(dl_tls_generation) + 1;
++      /* This cannot be in a data-race so non-atomic load would be valid too.  */
++      size_t newgen = atomic_load_relaxed (&GL(dl_tls_generation)) + 1;
++      /* TODO: Concurrent readers may see an overflowed gen, which is bad,
++         but overflow is guaranteed to crash the dlopen that is executing.  */
++      atomic_store_relaxed (&listp->slotinfo[idx].gen, newgen);
++      /* Synchronize with _dl_allocate_tls_init (see notes there).  */
++      atomic_store_release (&listp->slotinfo[idx].map, l);
+     }
+ }

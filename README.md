@@ -4,7 +4,7 @@ This repository provides a method for working around the sporadic issue seen on 
 
 If you are running an ubuntu-based system and can upgrade to **version 21.10 (Impish Indri)** this is the safest and easiest way to alleviate the issue, since that version contains glibc v2.34 in which the underlying issue is completely fixed.
 
-If instead you want to work around this issue, you can use this repository. It provides a build procedure (in an isolated Docker&reg; container) to produce patched versions of the glibc libraries for recent Ubuntu&reg; and Debian&reg; releases. These patched versions [incorporate an initial fix](https://patchwork.ozlabs.org/project/glibc/patch/568D5E11.3010301@arm.com/) proposed on the [libc-alpha mailing list](https://sourceware.org/mailman/listinfo/libc-alpha) that mitigate the issue. In the release area of this repository you can find the debian package build artefacts produced by running the build on Ubuntu 18.04 & 20.04 as well as Debian 9, 10 & 11. You can install these artefacts on an appropriate debian-based machine, virtual machine or docker container, by using `dpkg -i`.
+If instead you want to work around this issue, you can use this repository. It provides a build procedure (in an isolated Docker&reg; container) to produce patched versions of the glibc libraries for recent Almalinux, Ubuntu&reg; and Debian&reg; releases. These patched versions [incorporate an initial fix](https://patchwork.ozlabs.org/project/glibc/patch/568D5E11.3010301@arm.com/) proposed on the [libc-alpha mailing list](https://sourceware.org/mailman/listinfo/libc-alpha) that mitigate the issue. In the release area of this repository you can find the debian package build artefacts produced by running the build on Ubuntu 18.04 & 20.04 as well as Debian 9, 10 & 11. You can install these artefacts on an appropriate debian-based machine, virtual machine or docker container, by using `dpkg -i`. For Almalinux you cand find the appropriate `rpm's` which should also work on UBI and CentOS containers.
 
 ## Bug Description 
 The [assert failure at concurrent pthread_create and dlopen](https://sourceware.org/bugzilla/show_bug.cgi?id=19329) glibc bug was first reported in December 2015 and can affect any process on Linux that creates a thread at the same time as opening a dynamic shared object library. Initially the issue was only observable with reasonable frequency on very large scale machine systems such as high performance computing clusters or cloud scale deployment platforms and so did not receive significant attention. However, early on there were [proposed patches](https://sourceware.org/bugzilla/show_bug.cgi?id=19329) to the library. Large scale systems applied those patches in-house and saw significant benefit. More recently a [proposed complete fix for this](https://sourceware.org/pipermail/libc-alpha/2021-February/122626.html) and a set of related issues has been reviewed by the glibc team and accepted into version 2.34 of glibc (released in August 2021). The 2.34 version of glibc is available in [RHEL 9 beta](https://developers.redhat.com/articles/2021/11/03/red-hat-enterprise-linux-9-beta-here) and [Ubuntu 21.10 (Impish Indri)](https://launchpad.net/ubuntu/+source/glibc). However, there are no plans to backport the fix into previous glibc versions and it is expected that previous versions will be in production use for a significant number of years (e.g. the current end-of-life date for Ubuntu:20.04 is April 2030). 
@@ -50,7 +50,7 @@ libc6:amd64     2.31-0ubuntu9.2
 ```
 
 ## Build procedure 
-To build a specific version of glibc on your own machine you will need a version of `docker` that supports `BUILDKIT` (this feature was added in version 18.09). This repository holds patches for all glibc versions from 2.24 to 2.33 inclusive. Running the build process takes between 10 and 60 mins based on the compute ability of your system.
+To build a specific version of glibc on your own machine you will need a version of `docker` that supports `BUILDKIT` (this feature was added in version 18.09). This repository holds patches for all glibc versions on debian derived systems from 2.24 to 2.33 inclusive, as well as a version for RHEL 8 with glibc 2.28. Running the build process takes between 10 and 60 mins based on the compute ability of your system.
 
 ### Pre-built artefacts
 This repository runs a number of github actions to build artefacts for specific Debian and Ubuntu versions and it is likely that these are all that is needed to patch your system. You can download the matching debian package for your system from the release area.
@@ -71,6 +71,8 @@ This repository runs a number of github actions to build artefacts for specific 
     | `ubuntu:18.04` | `ubuntu:bionic` |
     | `ubuntu:20.04` | `ubuntu:focal` |
     | `ubuntu:21.04` | `ubuntu:hirsute` |
+    | `almalinux:8.4` | |
+    | `almalinux:8.5` | |
 
 Here is an example build command (for `debian:9`):
 ```
@@ -86,6 +88,13 @@ libc6_2.27-3ubuntu1.4.custom_amd64.deb
 libc6_2.28-10.custom_amd64.deb
 libc6_2.31-13+deb11u2.custom_amd64.deb
 ```
+
+When building for Almalinux you must use the `Dockerfile.rhel` rather than the debian `Dockerfile` so the build command is 
+```
+DOCKER_BUILDKIT=1 docker build --build-arg DIST_TAG=8.5 -f Dockerfile.rhel --output type=local,dest=. .
+```
+
+If you have access to a RHEL subscription you should be able to adapt the `Dockerfile.rhel` trivially to include the correct repos to support building the sources directly in a `ubi8` container.
 
 ### Overriding package version string
 The package version extension defaults to `.DIST_BASE.DIST_TAG.custom`, where
@@ -105,6 +114,13 @@ Installing a specific debian package on a system is as simple as executing
 dpkg -i libc6_2.24-11+deb9u4.custom_amd64.deb
 ```
 For your system replace the debian package with the correct version that matches the glibc you already have (see for example the output from `dpkg-query --show libc6:amd64`)
+
+Installing the rpms on a UBI / Almalinux system requires you to install several of the packages at once, for example
+```
+dnf install -y  glibc-2.28-164.custom.el8.x86_64.rpm  \
+                glibc-common-2.28-164.custom.el8.x86_64.rpm \
+                glibc-minimal-langpack-2.28-164.custom.el8.x86_64.rpm
+```
 
 ### Installing in a Docker container
 When building a docker container with a specific patch, assuming the patch is in the top level docker context folder you would have a `Dockerfile` like

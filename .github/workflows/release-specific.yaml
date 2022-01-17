@@ -17,8 +17,18 @@ on:
         type: string
 
 jobs:
-  build:
+  build-ubuntu:
+    if: github.event.inputs.dist-base == 'ubuntu' || github.event.inputs.dist-base == 'debian'
     uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
     with: 
       dist-base: ${{ github.event.inputs.dist-base }}
       dist-tag:  ${{ github.event.inputs.dist-tag }}
+      dockerfile: Dockerfile.debian
+
+  build-rhel:
+    if: github.event.inputs.dist-base == 'almalinux' 
+    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
+    with: 
+      dist-base: ${{ github.event.inputs.dist-base }}
+      dist-tag:  ${{ github.event.inputs.dist-tag }}
+      dockerfile: Dockerfile.rhel      
