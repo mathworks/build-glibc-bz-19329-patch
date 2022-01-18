@@ -45,3 +45,17 @@ jobs:
     with: 
       dist-base: ubuntu
       dist-tag: hirsute
+
+  build-alma-8-4:
+    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
+    with: 
+      dist-base: almalinux
+      dist-tag: 8.4
+      dockerfile: Dockerfile.rhel
+
+  build-alma-8-5:
+    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
+    with: 
+      dist-base: almalinux
+      dist-tag: 8.5
+      dockerfile: Dockerfile.rhel
