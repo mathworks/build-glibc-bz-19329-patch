@@ -1,6 +1,6 @@
 # Copyright 2021 The MathWorks, Inc.
 ---
-name: "release-all"
+name: "release-all-debian"
 
 # Build and release all artifacts is either triggered manually or on the first day of the month to 
 # ensure all artifacts are up-to-date with security and other patches to these distributions
@@ -45,17 +45,3 @@ jobs:
     with: 
       dist-base: ubuntu
       dist-tag: hirsute
-
-  build-alma-8-4:
-    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
-    with: 
-      dist-base: almalinux
-      dist-tag: 8.4
-      dockerfile: Dockerfile.rhel
-
-  build-alma-8-5:
-    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
-    with: 
-      dist-base: almalinux
-      dist-tag: 8.5
-      dockerfile: Dockerfile.rhel
