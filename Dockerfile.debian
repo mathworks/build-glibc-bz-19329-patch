@@ -1,4 +1,4 @@
-# Copyright 2021 The MathWorks, Inc.
+# Copyright 2021 - 2022 The MathWorks, Inc.
 ARG BUILD_ROOT=/opt/glibc/src/glibc/
 
 # Default to building for glibc 2.31 in ubuntu:20.04 but by specifying
@@ -16,10 +16,11 @@ ARG OVERRIDE_DIST_RELEASE=false
 ENV DEBIAN_FRONTEND="noninteractive" \
     TZ="Etc/UTC" 
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    quilt \ 
-    nano \ 
-    devscripts
+RUN apt-get update && apt-get -y upgrade && \
+    apt-get install --no-install-recommends -y \
+        quilt \
+        nano \
+        devscripts
 
 ARG PKG_EXT
 ARG BUILD_ROOT
