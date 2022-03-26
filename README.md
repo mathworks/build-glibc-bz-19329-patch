@@ -58,7 +58,7 @@ This repository runs a number of github actions to build artefacts for specific 
 ### Building
 1. Clone this repository locally and change folder into the repository
 ```
-    git clone https://build-glibc-bz19329-patch.github.com
+    git clone https://github.com/mathworks/build-glibc-bz-19329-patch.git
     cd build-glibc-bz19329-patch
 ```
 2. Build (using `docker build`) for the distribution and specific release you want to patch. Select the distribution and specific distribution version by setting the build argument `DIST_BASE` and `DIST_TAG`. `DIST_BASE:DIST_TAG` must be one of 
