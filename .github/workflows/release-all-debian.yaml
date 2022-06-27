@@ -15,7 +15,7 @@ jobs:
       matrix:
         dist-base: debian
         dist-tag:  [ stretch buster bullseye ]
-    uses: ./.github/workflows/build-glibc-and-release.yaml@main
+    uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
       dist-base: ${{ matrix.dist-base }}
       dist-tag: ${{ matrix.dist-tag }}
@@ -25,8 +25,7 @@ jobs:
       matrix:
         dist-base: ubuntu
         dist-tag:  [ bionic focal hirsute ]
-    uses: ./.github/workflows/build-glibc-and-release.yaml@main
+    uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
       dist-base: ${{ matrix.dist-base }}
       dist-tag: ${{ matrix.dist-tag }}
-      
