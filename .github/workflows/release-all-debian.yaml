@@ -10,20 +10,20 @@ on:
     - cron:  '0 0 1 * *'  
 
 jobs:
-  # build-all-debian:
-  #   uses: ./.github/workflows/build-glibc-and-release.yaml
-  #   with: 
-  #     dist-base: debian
-  #     dist-tag: ${{ matrix.dist-tag }}
-  #   strategy:
-  #     matrix:
-  #       dist-tag: [stretch buster bullseye]
+  build-all-debian:
+    strategy:
+      matrix:
+        tag: [stretch buster bullseye]
+    uses: ./.github/workflows/build-glibc-and-release.yaml
+    with: 
+      dist-base: debian
+      dist-tag: ${{ matrix.tag }}
 
   build-all-ubuntu:
     strategy:
       matrix:
-        dist-tag: [bionic focal hirsute]
+        tag: [bionic focal hirsute]
     uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
       dist-base: ubuntu
-      dist-tag: ${{ matrix.dist-tag }}
+      dist-tag: ${{ matrix.tag }}
