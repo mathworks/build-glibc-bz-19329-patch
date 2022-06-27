@@ -10,38 +10,23 @@ on:
     - cron:  '0 0 1 * *'  
 
 jobs:
-  build-debian-stretch:
-    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
+  build-all-debian:
+    strategy:
+      matrix:
+        dist-base: debian
+        dist-tag:  [ stretch buster bullseye ]
+    uses: ./.github/workflows/build-glibc-and-release.yaml@main
     with: 
-      dist-base: debian
-      dist-tag: stretch
+      dist-base: ${{ matrix.dist-base }}
+      dist-tag: ${{ matrix.dist-tag }}
 
-  build-debian-buster:
-    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
+  build-all-ubuntu:
+    strategy:
+      matrix:
+        dist-base: ubuntu
+        dist-tag:  [ bionic focal hirsute ]
+    uses: ./.github/workflows/build-glibc-and-release.yaml@main
     with: 
-      dist-base: debian
-      dist-tag: buster
-
-  build-debian-bullseye:
-    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
-    with: 
-      dist-base: debian
-      dist-tag: bullseye
-
-  build-ubuntu-bionic:
-    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
-    with: 
-      dist-base: ubuntu
-      dist-tag: bionic
-
-  build-ubuntu-focal:
-    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
-    with: 
-      dist-base: ubuntu
-      dist-tag: focal
-
-  build-ubuntu-hirsute:
-    uses: mathworks/build-glibc-bz-19329-patch/.github/workflows/build-glibc-and-release.yaml@main
-    with: 
-      dist-base: ubuntu
-      dist-tag: hirsute
+      dist-base: ${{ matrix.dist-base }}
+      dist-tag: ${{ matrix.dist-tag }}
+      

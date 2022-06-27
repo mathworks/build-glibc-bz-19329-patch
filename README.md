@@ -2,7 +2,9 @@
 ## Summary
 This repository provides a method for working around the sporadic issue seen on older linux distributions: MathWorks&reg; products can trigger an [assert failure at concurrent pthread_create and dlopen (BZ-19329)](https://sourceware.org/bugzilla/show_bug.cgi?id=19329) in the [GNU C Libraries (glibc)](https://www.gnu.org/software/libc/).
 
-If you are running an ubuntu-based system and can upgrade to **version 21.10 (Impish Indri)** this is the safest and easiest way to alleviate the issue, since that version contains glibc v2.34 in which the underlying issue is completely fixed.
+If you are running
+* **ubuntu-based** systems and can upgrade to **version 21.10 (Impish Indri)** this is the safest and easiest way to alleviate the issue, since that version contains glibc v2.34 in which the underlying issue is completely fixed.
+* **RHEL-based 8.4 or 8.5** systems (*update 27 June 2022*). It appears that RHEL have patched the `glibc-2.28` packages in release `189` to fix this issue. Ensure that you have installed at least [`glibc-2.28-189.1.el8`](https://git.almalinux.org/rpms/glibc/commit/385bc0f199bf51199143fe12b857f4983db76e48).
 
 If instead you want to work around this issue, you can use this repository. It provides a build procedure (in an isolated Docker&reg; container) to produce patched versions of the glibc libraries for recent Almalinux, Ubuntu&reg; and Debian&reg; releases. These patched versions [incorporate an initial fix](https://patchwork.ozlabs.org/project/glibc/patch/568D5E11.3010301@arm.com/) proposed on the [libc-alpha mailing list](https://sourceware.org/mailman/listinfo/libc-alpha) that mitigate the issue. In the release area of this repository you can find the debian package build artefacts produced by running the build on Ubuntu 18.04 & 20.04 as well as Debian 9, 10 & 11. You can install these artefacts on an appropriate debian-based machine, virtual machine or docker container, by using `dpkg -i`. For Almalinux you cand find the appropriate `rpm's` which should also work on UBI and CentOS containers.
 
@@ -74,6 +76,8 @@ This repository runs a number of github actions to build artefacts for specific 
     | `almalinux:8.4` | |
     | `almalinux:8.5` | |
 
+*Note*: You should only patch RHEL 8.4 or 8.5 if you cannot get `glibc-2.28-189.1.el8` onto the machine via the normal upgrade procedures.
+
 Here is an example build command (for `debian:9`):
 ```
 DOCKER_BUILDKIT=1 docker build --build-arg DIST_BASE=debian --build-arg DIST_TAG=9 --output type=local,dest=. .
@@ -130,6 +134,12 @@ FROM debian:9
 COPY libc6_2.24-11+deb9u4.custom_amd64.deb /tmp/
 RUN dpkg -i /tmp/libc6_2.24-11+deb9u4.custom_amd64.deb
 ```
+
+### RHEL 8.4 & 8.5 Update (*27 June 2022*)
+
+RHEL have just integrated the bz-19329 patch into [`glibc-2.28-189.1.el8`](https://git.almalinux.org/rpms/glibc/commit/385bc0f199bf51199143fe12b857f4983db76e48). It appear that the change actually went into build [`2.28-175`](https://git.almalinux.org/rpms/glibc/src/commit/385bc0f199bf51199143fe12b857f4983db76e48/SPECS/glibc.spec#L2721) and got released with `2.28-189`.
+
+Unless you need to use a `pre-189` release of the package you should no longer need to use this repository to patch RHEL and AlmaLinux.
 
 ## Patch sources
 These patches all derive from an [original patch](https://sourceware.org/legacy-ml/libc-alpha/2016-01/msg00480.html) put together by Szabolcs Nagy in January 2016. The 2.24 to 2.28 patches in this repo are  derived from this original e-mail and can be downloaded directly from the archive of the `libc-alpha@sourceware.org` mailing list where they were proposed:
