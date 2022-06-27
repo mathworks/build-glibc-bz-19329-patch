@@ -13,7 +13,7 @@ jobs:
   build-all-debian:
     strategy:
       matrix:
-        dist-tag:  [ stretch buster bullseye ]
+        dist-tag: [stretch buster bullseye]
     uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
       dist-base: debian
@@ -22,7 +22,7 @@ jobs:
   build-all-ubuntu:
     strategy:
       matrix:
-        dist-tag:  [ bionic focal hirsute ]
+        dist-tag: [bionic focal hirsute]
     uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
       dist-base: ubuntu
