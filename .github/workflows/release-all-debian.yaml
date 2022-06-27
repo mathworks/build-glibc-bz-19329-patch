@@ -11,13 +11,13 @@ on:
 
 jobs:
   build-all-debian:
-    strategy:
-      matrix:
-        dist-tag: [stretch buster bullseye]
     uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
       dist-base: debian
       dist-tag: ${{ matrix.dist-tag }}
+    strategy:
+      matrix:
+        dist-tag: [stretch buster bullseye]
 
   build-all-ubuntu:
     strategy:
