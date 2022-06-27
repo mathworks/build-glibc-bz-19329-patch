@@ -1,4 +1,4 @@
-# Copyright 2021 The MathWorks, Inc.
+# Copyright 2021-2022 The MathWorks, Inc.
 ---
 name: "release-all-debian"
 
@@ -10,14 +10,14 @@ on:
     - cron:  '0 0 1 * *'  
 
 jobs:
-  build-all-debian:
-    uses: ./.github/workflows/build-glibc-and-release.yaml
-    with: 
-      dist-base: debian
-      dist-tag: ${{ matrix.dist-tag }}
-    strategy:
-      matrix:
-        dist-tag: [stretch buster bullseye]
+  # build-all-debian:
+  #   uses: ./.github/workflows/build-glibc-and-release.yaml
+  #   with: 
+  #     dist-base: debian
+  #     dist-tag: ${{ matrix.dist-tag }}
+  #   strategy:
+  #     matrix:
+  #       dist-tag: [stretch buster bullseye]
 
   build-all-ubuntu:
     strategy:
