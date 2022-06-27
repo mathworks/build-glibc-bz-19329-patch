@@ -9,21 +9,42 @@ on:
   schedule:
     - cron:  '0 0 1 * *'  
 
+# Wish I could use a matrix strategy here - tried to and discovered that there are limitations
+#     The strategy property is not supported in any job that calls a reusable workflow.
+# from https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
 jobs:
-  build-all-debian:
-    strategy:
-      matrix:
-        tag: [stretch buster bullseye]
+  build-debian-stretch:
     uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
       dist-base: debian
-      dist-tag: ${{ matrix.tag }}
+      dist-tag: stretch
 
-  build-all-ubuntu:
-    strategy:
-      matrix:
-        tag: [bionic focal hirsute]
+  build-debian-buster:
+    uses: ./.github/workflows/build-glibc-and-release.yaml
+    with: 
+      dist-base: debian
+      dist-tag: buster
+
+  build-debian-bullseye:
+    uses: ./.github/workflows/build-glibc-and-release.yaml
+    with: 
+      dist-base: debian
+      dist-tag: bullseye
+
+  build-ubuntu-bionic:
     uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
       dist-base: ubuntu
-      dist-tag: ${{ matrix.tag }}
+      dist-tag: bionic
+
+  build-ubuntu-focal:
+    uses: ./.github/workflows/build-glibc-and-release.yaml
+    with: 
+      dist-base: ubuntu
+      dist-tag: focal
+
+  build-ubuntu-hirsute:
+    uses: ./.github/workflows/build-glibc-and-release.yaml
+    with: 
+      dist-base: ubuntu
+      dist-tag: hirsute
