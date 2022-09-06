@@ -42,9 +42,3 @@ jobs:
     with: 
       dist-base: ubuntu
       dist-tag: focal
-
-  build-ubuntu-hirsute:
-    uses: ./.github/workflows/build-glibc-and-release.yaml
-    with: 
-      dist-base: ubuntu
-      dist-tag: hirsute
