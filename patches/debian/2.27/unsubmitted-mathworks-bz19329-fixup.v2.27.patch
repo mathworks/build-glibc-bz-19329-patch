@@ -1,0 +1,11 @@
+--- a/elf/dl-tls.c
++++ b/elf/dl-tls.c
+@@ -563,7 +563,7 @@ _dl_allocate_tls_init (void *result)
+ 	}
+ 
+       total += cnt;
+-      if (total >= dtv_slots)
++      if (total > dtv_slots)
+ 	break;
+ 
+       /* Synchronize with dl_add_to_slotinfo.  */

@@ -1,10 +1,8 @@
-# Copyright 2021 The MathWorks, Inc.
+# Copyright 2021 - 2022 The MathWorks, Inc.
 ARG BUILD_ROOT=/root/
 ARG RPM_DIR=${BUILD_ROOT}/rpmbuild/RPMS/x86_64/
 
-# Default to building for glibc 2.31 in ubuntu:20.04 but by specifying
-# --build-arg RELEASE=18.04 in the docker build phase this will build for 
-# glibc 2.27
+
 ARG ARCH=
 ARG DIST_BASE=almalinux
 ARG DIST_TAG=8.5
@@ -21,10 +19,11 @@ RUN dnf download --source glibc && \
     dnf builddep -y --nodocs glibc-*.src.rpm && \
     rpm -ivh glibc-*.src.rpm
 
+ARG GLIBC_VERSION=2.28-189
 COPY scripts/update-specfile.sh ${BUILD_ROOT}
-COPY patches/rhel ${BUILD_ROOT}/patches
+COPY patches/rhel/${GLIBC_VERSION} ${BUILD_ROOT}/patches
 
-RUN cp patches/2.28/* rpmbuild/SOURCES && \
+RUN cp patches/* rpmbuild/SOURCES && \
     ./update-specfile.sh
 
 RUN rpmbuild --nocheck -bb rpmbuild/SPECS/glibc.spec

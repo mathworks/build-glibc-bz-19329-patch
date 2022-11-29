@@ -1,37 +1,14 @@
-# Build `glibc` BZ-19329 Patch
+# Build `glibc` Patchs
 ## Summary
-This repository provides a method for working around the sporadic issue seen on older linux distributions: MathWorks&reg; products can trigger an [assert failure at concurrent pthread_create and dlopen (BZ-19329)](https://sourceware.org/bugzilla/show_bug.cgi?id=19329) in the [GNU C Libraries (glibc)](https://www.gnu.org/software/libc/).
+This repository provides a method for working around various issues seen in older linux distributions glibc libraries. The glibc libraries are so core to the behaviour of a system that they rarely get updated in older distributions, so we provide ways to patch those libraries. 
 
-If you are running
-* **ubuntu-based** systems and can upgrade to **version 21.10 (Impish Indri)** this is the safest and easiest way to alleviate the issue, since that version contains glibc v2.34 in which the underlying issue is completely fixed.
-* **RHEL-based 8.4 or 8.5** systems (*update 27 June 2022*). It appears that RHEL have patched the `glibc-2.28` packages in release `189` to fix this issue. Ensure that you have installed at least [`glibc-2.28-189.1.el8`](https://git.almalinux.org/rpms/glibc/commit/385bc0f199bf51199143fe12b857f4983db76e48).
+## Issues Currently Patched
+* [BZ-19329](BZ-19329.md) ([bugzilla report](https://sourceware.org/bugzilla/show_bug.cgi?id=19329))  is a significant sporadic issue in all glibc versions up to 2.34. 
+* [BZ-17645](BZ-17645.md) ([bugzilla report](https://sourceware.org/bugzilla/show_bug.cgi?id=17645)) is a significant performance issue on all glibc versions up to 2.35. 
 
-If instead you want to work around this issue, you can use this repository. It provides a build procedure (in an isolated Docker&reg; container) to produce patched versions of the glibc libraries for recent Almalinux, Ubuntu&reg; and Debian&reg; releases. These patched versions [incorporate an initial fix](https://patchwork.ozlabs.org/project/glibc/patch/568D5E11.3010301@arm.com/) proposed on the [libc-alpha mailing list](https://sourceware.org/mailman/listinfo/libc-alpha) that mitigate the issue. In the release area of this repository you can find the debian package build artefacts produced by running the build on Ubuntu 18.04 & 20.04 as well as Debian 9, 10 & 11. You can install these artefacts on an appropriate debian-based machine, virtual machine or docker container, by using `dpkg -i`. For Almalinux you cand find the appropriate `rpm's` which should also work on UBI and CentOS containers.
-
-## Bug Description 
-The [assert failure at concurrent pthread_create and dlopen](https://sourceware.org/bugzilla/show_bug.cgi?id=19329) glibc bug was first reported in December 2015 and can affect any process on Linux that creates a thread at the same time as opening a dynamic shared object library. Initially the issue was only observable with reasonable frequency on very large scale machine systems such as high performance computing clusters or cloud scale deployment platforms and so did not receive significant attention. However, early on there were [proposed patches](https://sourceware.org/bugzilla/show_bug.cgi?id=19329) to the library. Large scale systems applied those patches in-house and saw significant benefit. More recently a [proposed complete fix for this](https://sourceware.org/pipermail/libc-alpha/2021-February/122626.html) and a set of related issues has been reviewed by the glibc team and accepted into version 2.34 of glibc (released in August 2021). The 2.34 version of glibc is available in [RHEL 9 beta](https://developers.redhat.com/articles/2021/11/03/red-hat-enterprise-linux-9-beta-here) and [Ubuntu 21.10 (Impish Indri)](https://launchpad.net/ubuntu/+source/glibc). However, there are no plans to backport the fix into previous glibc versions and it is expected that previous versions will be in production use for a significant number of years (e.g. the current end-of-life date for Ubuntu:20.04 is April 2030). 
-
-More recently MathWorks products have made extensive use of a C++ micro-services architecture. This architecture leads to a more dynamic system in which library modules are loaded at the point of use. As a result, the MATLAB&reg; process is more likely to load a library at the same time as creating a thread, and so is more likely to encounter this glibc bug. When this [issue is encountered](https://www.mathworks.com/matlabcentral/answers/1454674-why-does-matlab-crash-on-linux-with-inconsistency-detected-by-ld-so-elf-dl-tls-c-597-_dl_allo) the console that opened MATLAB shows a message similar to the following:
-
-```
-Inconsistency detected by ld.so: ../elf/dl-tls.c: 597: _dl_allocate_tls_init: Assertion 'listp != NULL' failed!
-```
-or
-```
-Inconsistency detected by ld.so: dl-tls.c: 493: _dl_allocate_tls_init: Assertion `listp->slotinfo[cnt].gen <= GL(dl_tls_generation)' failed!
-```
-There might also be a stack trace file called `matlab_crash_dump.${PID}` in the users home folder or the current working folder. This usually inidicates that a segmentation violation has been detected and the stack trace starts with something similar to the following:
-
-```
-Stack Trace (from fault):
-[  0] 0x00002b661142d5a0    /lib64/ld-linux-x86-64.so.2+00075168 _dl_allocate_tls_init+00000080
-[  1] 0x00002b66120c187c    /usr/lib64/libpthread.so.0+00034940 pthread_create+00001884
-```
-
-If you see these or similar signatures at a sufficient frequency on a system, you might want to consider patching glibc on your machines or containers. 
 
 ### **Caution**
-Note that **all** processes on your machine share glibc so this patch will apply to the system as a whole and not just to MathWorks products. Most applications and programs on your computer are likely to use glibc. Care should be taken to ensure you apply the correct version of the patch to your system based on the current version of glibc. Applying the wrong version could make your whole system unusable. Try installing the patch inside a disposable docker container first to test your install procedure – you can find instructions below.
+Note that **all** processes on your machine share glibc libraries so these patches will apply to the system as a whole and not just to MathWorks products. Most applications and programs on your computer are likely to use glibc. Care should be taken to ensure you apply the correct version of the patch to your system based on the current version of glibc. Applying the wrong version could make your whole system unusable. Try installing the patch inside a disposable docker container first to test your install procedure – you can find instructions below.
 
 You can find the major version of glibc you are running using, for example:
 
@@ -55,7 +32,7 @@ libc6:amd64     2.31-0ubuntu9.2
 To build a specific version of glibc on your own machine you will need a version of `docker` that supports `BUILDKIT` (this feature was added in version 18.09). This repository holds patches for all glibc versions on debian derived systems from 2.24 to 2.33 inclusive, as well as a version for RHEL 8 with glibc 2.28. Running the build process takes between 10 and 60 mins based on the compute ability of your system.
 
 ### Pre-built artefacts
-This repository runs a number of github actions to build artefacts for specific Debian and Ubuntu versions and it is likely that these are all that is needed to patch your system. You can download the matching debian package for your system from the release area.
+This repository runs a number of github actions to build artefacts for specific Debian, Ubuntu and RHEL versions and it is likely that these are all that is needed to patch your system. You can download the matching  packages for your system from the release area.
 
 ### Building
 1. Clone this repository locally and change folder into the repository
@@ -134,40 +111,3 @@ FROM debian:9
 COPY libc6_2.24-11+deb9u4.custom_amd64.deb /tmp/
 RUN dpkg -i /tmp/libc6_2.24-11+deb9u4.custom_amd64.deb
 ```
-
-### RHEL 8.4 & 8.5 Update (*27 June 2022*)
-
-RHEL have just integrated the bz-19329 patch into [`glibc-2.28-189.1.el8`](https://git.almalinux.org/rpms/glibc/commit/385bc0f199bf51199143fe12b857f4983db76e48). It appear that the change actually went into build [`2.28-175`](https://git.almalinux.org/rpms/glibc/src/commit/385bc0f199bf51199143fe12b857f4983db76e48/SPECS/glibc.spec#L2721) and got released with `2.28-189`.
-
-Unless you need to use a `pre-189` release of the package you should no longer need to use this repository to patch RHEL and AlmaLinux.
-
-## Patch sources
-These patches all derive from an [original patch](https://sourceware.org/legacy-ml/libc-alpha/2016-01/msg00480.html) put together by Szabolcs Nagy in January 2016. The 2.24 to 2.28 patches in this repo are  derived from this original e-mail and can be downloaded directly from the archive of the `libc-alpha@sourceware.org` mailing list where they were proposed:
-
-* https://sourceware.org/legacy-ml/libc-alpha/2016-11/msg01092.html
-* https://sourceware.org/legacy-ml/libc-alpha/2016-11/msg01093.html
-
-These 2 patches are directly linked in [the original bug report](https://sourceware.org/bugzilla/show_bug.cgi?id=19329) in comment 7 by Pádraig Brady. In addition, the bug report also has a reference to the original Szabolcs Nagy patch in comment 4 (dated January 2016). The 2 messages above refer back to that original patch via a [message describing the overall problem in more detail](https://sourceware.org/legacy-ml/libc-alpha/2016-11/msg01026.html).
-
-In addition, in [Sept 2017 Pádraig Brady](https://sourceware.org/bugzilla/show_bug.cgi?id=19329) pointed out that there was an off-by-one error in the original patch that needs to be included
-``` diff
-diff --git a/elf/dl-tls.c b/elf/dl-tls.c
-index 073321c..2c9ad2a 100644
---- a/elf/dl-tls.c
-+++ b/elf/dl-tls.c
-@@ -571,7 +571,7 @@ _dl_allocate_tls_init (void *result)
-        }
-
-       total += cnt;
--      if (total >= dtv_slots)
-+      if (total > dtv_slots)
-        break;
-
-       /* Synchronize with dl_add_to_slotinfo.  */
-```
-This is source for the final `unsubmitted-bz19329-fixup.v2.27.patch`
-
-In glibc v2.31 the original source code changed significantly and the patches needed to be slightly adapted so as to match the new codebase. These adapted patches are included here in the `patches/2.31` folder and soft-linked from 2.32 and 2.33.
-
-## Acknowledgement and thanks
-Many thanks to the broader glibc team and particularly Szabolcs Nagy for providing the original patches and for fixing these issues in glibc v2.34.

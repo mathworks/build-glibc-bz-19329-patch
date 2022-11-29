@@ -20,16 +20,17 @@ EOF
 PATCH_FOLDER=$(pwd)/patches/${VER}
 
 pushd glibc-${VER}/debian/patches
-cp ${PATCH_FOLDER}/unsubmitted-bz19329-*.patch any/
-echo any/unsubmitted-bz19329-* | tr ' ' '\n' >> series
+cp ${PATCH_FOLDER}/unsubmitted-mathworks-*.patch any/
+echo any/unsubmitted-mathworks-* | tr ' ' '\n' >> series
  
-quilt push
-quilt refresh
-quilt push
-quilt refresh
-quilt push
-quilt refresh
- 
+for p in `ls any/`
+do
+    echo "push patch $p"
+    quilt push
+    quilt refresh
+done
+
+
 quilt pop -a  
   
 dch --newversion="${PKGVER}" "patching glibc"
