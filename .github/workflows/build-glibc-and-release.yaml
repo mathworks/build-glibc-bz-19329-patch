@@ -41,7 +41,7 @@ jobs:
           wget -q -O LICENSES 'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=LICENSES;hb=HEAD'
 
       - name: Delete existing release
-        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        uses: dev-drprasad/delete-tag-and-release@v0.2.1
         with:
           delete_release: true 
           tag_name: ${{ inputs.dist-base }}-${{ inputs.dist-tag }}
