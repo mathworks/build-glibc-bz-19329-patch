@@ -13,12 +13,6 @@ on:
 #     The strategy property is not supported in any job that calls a reusable workflow.
 # from https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
 jobs:
-  build-debian-stretch:
-    uses: ./.github/workflows/build-glibc-and-release.yaml
-    with: 
-      dist-base: debian
-      dist-tag: stretch
-
   build-debian-buster:
     uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
