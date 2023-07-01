@@ -6,9 +6,9 @@ name: "release-all-rhel"
 # ensure all artifacts are up-to-date with security and other patches to these distributions
 on:
   workflow_dispatch:
-  # Resume build on almalinux post glibc-2.28-189.1.el8 releases as we are still fixing new issues
-  schedule:
-    - cron:  '0 2 1 * *'  
+  # All current RHEL and downstream version include all required patches - no need to build each month
+  # schedule:
+  #   - cron:  '0 2 1 * *'  
 
 jobs:
   build-alma-8-4:
