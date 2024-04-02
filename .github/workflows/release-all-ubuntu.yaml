@@ -1,0 +1,26 @@
+# Copyright 2021-2022 The MathWorks, Inc.
+---
+name: "release-all-ubuntu"
+
+# Build and release all artifacts is either triggered manually or on the first day of the month to 
+# ensure all artifacts are up-to-date with security and other patches to these distributions
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 3 1 * *'  
+
+# Wish I could use a matrix strategy here - tried to and discovered that there are limitations
+#     The strategy property is not supported in any job that calls a reusable workflow.
+# from https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
+jobs:
+  build-ubuntu-bionic:
+    uses: ./.github/workflows/build-glibc-and-release.yaml
+    with: 
+      dist-base: ubuntu
+      dist-tag: bionic
+
+  build-ubuntu-focal:
+    uses: ./.github/workflows/build-glibc-and-release.yaml
+    with: 
+      dist-base: ubuntu
+      dist-tag: focal
