@@ -1,0 +1,36 @@
+# Copyright 2025 The MathWorks, Inc.
+ARG BUILD_ROOT=/root/
+ARG RPM_DIR=${BUILD_ROOT}/rpmbuild/RPMS/x86_64/
+
+ARG ARCH=
+ARG DIST_BASE=amazonlinux
+ARG DIST_TAG=2
+FROM ${DIST_BASE}:${DIST_TAG} AS build-stage
+
+RUN yum install -y rpm-build make yum-utils
+
+ARG BUILD_ROOT
+WORKDIR ${BUILD_ROOT}
+
+RUN yumdownloader --source glibc && \
+    yum-builddep -y glibc-*.src.rpm && \
+    rpm -ivh glibc-*.src.rpm
+
+ARG GLIBC_VERSION=2.26
+COPY scripts/update-specfile-al2.sh ${BUILD_ROOT}
+COPY patches/al2/${GLIBC_VERSION} ${BUILD_ROOT}/patches
+
+RUN cp patches/* rpmbuild/SOURCES && \
+    ./update-specfile-al2.sh
+
+#RUN rpmbuild --nocheck -bb rpmbuild/SPECS/glibc.spec
+#
+#ARG RPM_DIR
+#WORKDIR ${RPM_DIR}
+#
+#RUN tar -czf all-packages.tar.gz *.rpm
+#
+#FROM scratch AS release-stage
+#ARG RPM_DIR
+#COPY --from=build-stage ${RPM_DIR}/*.rpm /build/
+#COPY --from=build-stage ${RPM_DIR}/all-packages.tar.gz /build/
