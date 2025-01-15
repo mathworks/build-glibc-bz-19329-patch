@@ -23,14 +23,14 @@ COPY patches/al2/${GLIBC_VERSION} ${BUILD_ROOT}/patches
 RUN cp patches/* rpmbuild/SOURCES && \
     ./update-specfile-al2.sh
 
-#RUN rpmbuild --nocheck -bb rpmbuild/SPECS/glibc.spec
-#
-#ARG RPM_DIR
-#WORKDIR ${RPM_DIR}
-#
-#RUN tar -czf all-packages.tar.gz *.rpm
-#
-#FROM scratch AS release-stage
-#ARG RPM_DIR
-#COPY --from=build-stage ${RPM_DIR}/*.rpm /build/
-#COPY --from=build-stage ${RPM_DIR}/all-packages.tar.gz /build/
+RUN rpmbuild --nocheck -bb rpmbuild/SPECS/glibc.spec
+
+ARG RPM_DIR
+WORKDIR ${RPM_DIR}
+
+RUN tar -czf all-packages.tar.gz *.rpm
+
+FROM scratch AS release-stage
+ARG RPM_DIR
+COPY --from=build-stage ${RPM_DIR}/*.rpm /build/
+COPY --from=build-stage ${RPM_DIR}/all-packages.tar.gz /build/
