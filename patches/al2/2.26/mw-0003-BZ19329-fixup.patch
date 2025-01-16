@@ -1,0 +1,25 @@
+From 82a104f513447ebcf0e43ad6f0a49fdfeff2a48b Mon Sep 17 00:00:00 2001
+From: Mike Gulick <mgulick@mathworks.com>
+Date: Wed, 15 Jan 2025 19:10:55 -0500
+Subject: [PATCH 3/5] BZ19329 fixup
+
+---
+ elf/dl-tls.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/elf/dl-tls.c b/elf/dl-tls.c
+index c60bbd72ea..305eae3d6d 100644
+--- a/elf/dl-tls.c
++++ b/elf/dl-tls.c
+@@ -570,7 +570,7 @@ _dl_allocate_tls_init (void *result)
+ 	}
+ 
+       total += cnt;
+-      if (total >= dtv_slots)
++      if (total > dtv_slots)
+ 	break;
+ 
+       /* Synchronize with dl_add_to_slotinfo.  */
+-- 
+2.39.5
+

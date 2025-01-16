@@ -1,8 +1,7 @@
+From ef6eb8f97d4ebfbb471bdd8d37455f2dadf507a3 Mon Sep 17 00:00:00 2001
 From: Szabolcs Nagy <szabolcs dot nagy at arm dot com>
-To: GNU C Library <libc-alpha at sourceware dot org>
-Cc: <nd at arm dot com>, Torvald Riegel <triegel at redhat dot com>
 Date: Wed, 30 Nov 2016 11:44:25 +0000
-Subject: [RFC PATCH 1/2][BZ 19329] remove broken code path for easier code review
+Subject: [PATCH 1/5] remove broken code path for easier code review
 
 This patch is not necessary for the bug fix, just makes concurrency
 code review easier (removes a data race and overflow from a broken
@@ -14,10 +13,15 @@ better to crash than leave half setup modules around.
 2016-11-30  Szabolcs Nagy  <szabolcs.nagy@arm.com>
 
 	* elf/dl-tls.c (_dl_add_to_slotinfo): OOM crash.
+---
+ elf/dl-tls.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
+diff --git a/elf/dl-tls.c b/elf/dl-tls.c
+index 5aba33b3fa..4daf88af6e 100644
 --- a/elf/dl-tls.c
 +++ b/elf/dl-tls.c
-@@ -918,18 +918,10 @@ _dl_add_to_slotinfo (struct link_map *l)
+@@ -927,18 +927,10 @@ _dl_add_to_slotinfo (struct link_map *l)
  		+ TLS_SLOTINFO_SURPLUS * sizeof (struct dtv_slotinfo));
        if (listp == NULL)
  	{
@@ -40,3 +44,6 @@ better to crash than leave half setup modules around.
  	}
  
        listp->len = TLS_SLOTINFO_SURPLUS;
+-- 
+2.39.5
+
