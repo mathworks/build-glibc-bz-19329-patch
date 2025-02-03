@@ -1,0 +1,19 @@
+# Copyright 2025 The MathWorks, Inc.
+---
+name: "release-all-amazonlinux"
+
+# Build and release all artifacts is either triggered manually or on the first day of the month to 
+# ensure all artifacts are up-to-date with security and other patches to these distributions
+on:
+  workflow_dispatch:
+
+# Wish I could use a matrix strategy here - tried to and discovered that there are limitations
+#     The strategy property is not supported in any job that calls a reusable workflow.
+# from https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
+jobs:
+  build-amazonlinux-2:
+    uses: ./.github/workflows/build-glibc-and-release.yaml
+    with: 
+      dist-base: amazonlinux2
+      dist-tag: 2
+      dockerfile: Dockerfile.al2
