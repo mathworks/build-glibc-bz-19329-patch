@@ -40,6 +40,11 @@ jobs:
           wget -q -O COPYING  'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=COPYING;hb=HEAD'
           wget -q -O LICENSES 'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=LICENSES;hb=HEAD'
 
+      - name: "Move build output to unique name in job"
+        shell: bash
+        run: |
+          mv build build-${{ inputs.dist-base }}-${{ inputs.dist-tag }}
+
       - name: Delete existing release
         uses: dev-drprasad/delete-tag-and-release@v0.2.1
         with:
@@ -52,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: |
-            build/${{ inputs.dist-base }}-${{ inputs.dist-tag }}/*
+            build-${{ inputs.dist-base }}-${{ inputs.dist-tag }}/*
 
       - name: Release artifacts
         uses: softprops/action-gh-release@v1
@@ -64,4 +69,4 @@ jobs:
           draft: false
           generate_release_notes: false
           files: |
-            build/${{ inputs.dist-base }}-${{ inputs.dist-tag }}/*
+            build-${{ inputs.dist-base }}-${{ inputs.dist-tag }}/*
