@@ -16,6 +16,6 @@ jobs:
   build-amazonlinux-2:
     uses: ./.github/workflows/build-glibc-and-release.yaml
     with: 
-      dist-base: amazonlinux2
+      dist-base: amazonlinux
       dist-tag: 2
       dockerfile: Dockerfile.al2
