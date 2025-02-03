@@ -52,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: |
-            build/*
+            build/${{ inputs.dist-base }}-${{ inputs.dist-tag }}/*
 
       - name: Release artifacts
         uses: softprops/action-gh-release@v1
@@ -64,4 +64,4 @@ jobs:
           draft: false
           generate_release_notes: false
           files: |
-            build/*
+            build/${{ inputs.dist-base }}-${{ inputs.dist-tag }}/*
