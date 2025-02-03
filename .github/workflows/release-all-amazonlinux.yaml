@@ -6,6 +6,8 @@ name: "release-all-amazonlinux"
 # ensure all artifacts are up-to-date with security and other patches to these distributions
 on:
   workflow_dispatch:
+  schedule:
+    - cron:  '0 9 1 * *' 
 
 # Wish I could use a matrix strategy here - tried to and discovered that there are limitations
 #     The strategy property is not supported in any job that calls a reusable workflow.
