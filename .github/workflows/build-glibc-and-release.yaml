@@ -37,8 +37,8 @@ jobs:
         shell: bash
         run: |
           cd build
-          wget -q -O COPYING  'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=COPYING;hb=HEAD'
-          wget -q -O LICENSES 'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=LICENSES;hb=HEAD'
+          wget -O COPYING  'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=COPYINGv2;hb=HEAD'
+          wget -O LICENSES 'https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=LICENSES;hb=HEAD'
 
       - name: Delete existing release
         uses: dev-drprasad/delete-tag-and-release@v0.2.1
